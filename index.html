@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나에게 응원의 편지 보내기</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ink:#22201c; --ink-soft:#5f5347; --paper:#fcfbf6;
+  --wood:#6b4626;
+  --ui-bg:#1f1b17; --ui-panel:#2a241f; --ui-fg:#f3ede4; --ui-dim:#a89c8c; --ui-line:#3d352d; --ui-accent:#ffd54a;
+  --c0:#fff48f; --c1:#ffc4dc; --c2:#bdf3cf; --c3:#bfe6ff; --c4:#ffd9b0; --c5:#e4c8f7;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--wood);color:var(--ink);font-family:"Noto Sans KR",system-ui,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+
+/* ── 무대: 배경 그림(1671×941) 비율을 유지하며 화면에 맞춤. 모든 위치는 이 안의 % ── */
+#stage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(100vw,calc(100vh * 1671 / 941));height:min(100vh,calc(100vw * 941 / 1671));
+  background:#c48a58 url("board.jpg") center/100% 100% no-repeat;container-type:size;overflow:hidden}
+
+/* 제목·꽃다발·소품은 배경 그림(board.jpg)에 그려진 것을 그대로 씁니다 */
+
+/* ── QR: 그림 속 QR 자리에 진짜 QR을 덮음 ── */
+/* QR: 미리 만든 qr.png를 그림 속 QR 자리에 덮음 */
+#qrbox{position:absolute;left:70.2%;top:9.6%;width:8.35%;height:15.1%;background:#fff}
+#qrbox img{position:absolute;left:50%;top:50%;height:100%;aspect-ratio:1;transform:translate(-50%,-50%);image-rendering:pixelated;display:block}
+#qrlink{position:absolute;left:68.8%;top:8.4%;width:21.7%;height:18.2%;z-index:7;cursor:pointer;border-radius:.5cqh;-webkit-tap-highlight-color:transparent}
+#qrlink:hover{box-shadow:0 0 0 .4cqh rgba(255,158,177,.8)}
+#qrlink:focus-visible{outline:2px solid #c9b6f2}
+
+/* ── 포스트잇 ── */
+#notes{position:absolute;inset:0;pointer-events:none}
+.note{position:absolute;perspective:1100px;--r:0deg;--d:0ms}
+.pin{position:absolute;left:50%;top:0;width:5.6%;aspect-ratio:1;margin-left:-2.8%;margin-top:-2.6%;border-radius:50%;z-index:3;
+  background:radial-gradient(circle at 36% 32%,#fff6 0,transparent 40%),var(--pin);box-shadow:0 .35cqh .6cqh rgba(0,0,0,.35),inset 0 -.2cqh .3cqh rgba(0,0,0,.25);
+  animation:pinin .3s ease-out both;animation-delay:calc(var(--d) + 320ms)}
+@keyframes pinin{from{transform:scale(0) translateY(-40%);opacity:0}to{transform:none;opacity:1}}
+.paper{position:relative;width:100%;height:100%;transform-style:preserve-3d;transform:rotate(var(--r));
+  transition:transform .85s cubic-bezier(.45,.05,.2,1);animation:slap .58s cubic-bezier(.2,.9,.3,1.15) both;animation-delay:var(--d)}
+.paper.stuck{animation:none}
+.note.flipped .paper{transform:rotate(var(--r)) rotateY(180deg)}
+.note.leaving .paper{animation:peel .62s ease-in both;animation-delay:var(--d)}
+.note.leaving .pin{animation:pinout .25s ease-in both;animation-delay:var(--d)}
+@keyframes pinout{to{transform:scale(0);opacity:0}}
+@keyframes slap{
+  0%{transform:rotate(calc(var(--r) - 9deg)) scale(1.5) translateY(-4%);opacity:0;filter:drop-shadow(0 34px 22px rgba(0,0,0,.45))}
+  55%{opacity:1;transform:rotate(calc(var(--r) + 1.5deg)) scale(.965);filter:drop-shadow(0 4px 4px rgba(0,0,0,.2))}
+  100%{transform:rotate(var(--r)) scale(1);opacity:1;filter:none}}
+@keyframes peel{to{transform:rotate(calc(var(--r) + 14deg)) translateY(9vh) scale(.88);opacity:0}}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--c);border-radius:.3cqh;
+  box-shadow:0 1.2cqh 2cqh -.9cqh rgba(0,0,0,.45),0 .2cqh .3cqh rgba(0,0,0,.1);display:flex;flex-direction:column;padding:11% 8% 6%}
+.face::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.35),rgba(255,255,255,0) 35%),radial-gradient(circle at 20% 30%,rgba(0,0,0,.035) 0 .6px,transparent 1.2px);background-size:100% 100%,7px 7px}
+.face::after{content:"";position:absolute;right:0;bottom:0;width:12%;height:12%;pointer-events:none;border-radius:0 0 .3cqh 0;
+  background:linear-gradient(135deg,transparent 49%,rgba(0,0,0,.04) 50%,rgba(0,0,0,.14) 100%)}
+.front{color:var(--ink)}
+.txt{flex:1;min-height:0;overflow:hidden;font-family:"Nanum Pen Script",cursive;line-height:1.22;word-break:keep-all;overflow-wrap:anywhere;white-space:pre-wrap;-webkit-text-stroke:.5px currentColor;position:relative;z-index:1}
+.foot{display:flex;align-items:flex-end;justify-content:flex-end;gap:4%;margin-top:3%;position:relative;z-index:1}
+.from{font-family:"Nanum Pen Script",cursive;color:#3a332c;white-space:nowrap;line-height:1;-webkit-text-stroke:.35px currentColor}
+.from::before{content:"— "}
+.doodle{position:absolute;left:8%;bottom:7%;line-height:1;opacity:.85;font-family:"Nanum Pen Script",cursive;z-index:1}
+.thumb{flex:0 0 34%;aspect-ratio:1;background:#fff;padding:4% 4% 9%;box-shadow:0 3px 8px rgba(0,0,0,.3);transform:rotate(5deg)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.has-thumb .foot{justify-content:space-between}
+.back{transform:rotateY(180deg);background:#fff;padding:4.5%;color:var(--ink-soft)}
+.back img{flex:1;min-height:0;width:100%;object-fit:cover;display:block}
+.back .cap{font-family:"Nanum Pen Script",cursive;text-align:center;padding-top:3%;line-height:1}
+.note .icon{position:absolute;right:6%;top:5%;font-size:.8em;opacity:.5;z-index:1}
+.front.has-photo .txt{padding-right:9%}
+
+/* ── 캐릭터(관리자 진입) · 로그인 창 ── */
+#charBtn{position:absolute;left:2.6%;top:2.6%;width:37.6%;height:29.4%;background:none;border:0;cursor:pointer;padding:0;z-index:6;-webkit-tap-highlight-color:transparent}
+#charBtn:focus-visible{outline:2px dashed rgba(255,255,255,.6)}
+#login{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+#login.show{display:flex}
+#login .box{background:#1c1c1f;color:#f3ede4;border-radius:16px;padding:26px 24px 22px;width:min(320px,88vw);text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+#login h3{margin:0 0 6px;font-size:17px}
+#login p{margin:0 0 16px;color:#a89c8c;font-size:13px}
+#login input{width:100%;padding:12px;border-radius:10px;border:1px solid #3d352d;background:#111;color:#fff;font-size:22px;text-align:center;letter-spacing:.4em;outline:none}
+#login input:focus{border-color:#c9b6f2}
+#login .msg{min-height:1.3em;color:#ffb4b4;font-size:12px;margin:8px 0 10px}
+#login .btns{display:flex;gap:8px}
+#login button{flex:1;padding:11px;border-radius:10px;border:0;font:700 14px "Noto Sans KR";cursor:pointer}
+#login .cancel{background:#2a241f;color:#a89c8c}
+#login .ok{background:#c9b6f2;color:#241c3a}
+
+/* ── 상태 ── */
+#empty{position:absolute;left:50%;top:61%;width:36cqh;height:36cqh;transform:translate(-50%,-50%) rotate(-1.5deg);
+  background:var(--c0);border-radius:.3cqh;box-shadow:0 1.4cqh 2.2cqh -1cqh rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;text-align:center;padding:8%;
+  font-family:"Nanum Pen Script",cursive;font-size:3.8cqh;line-height:1.25;color:var(--ink);word-break:keep-all;text-wrap:balance;-webkit-text-stroke:.5px currentColor}
+#empty::before{content:"";position:absolute;left:50%;top:-1cqh;width:2cqh;height:2cqh;margin-left:-1cqh;border-radius:50%;background:radial-gradient(circle at 36% 32%,#fff6 0,transparent 40%),#e2503c;box-shadow:0 .35cqh .6cqh rgba(0,0,0,.35)}
+#empty[hidden]{display:none}
+#pager{position:absolute;left:50%;top:91.6%;transform:translateX(-50%);height:5.6%;min-width:9.6%;padding:0 2.2cqh;border-radius:5cqh;background:rgba(58,34,14,.95);
+  display:flex;align-items:center;justify-content:center;gap:1.6cqh;font-family:Jua,sans-serif;font-size:2.6cqh;color:#fff;letter-spacing:.06em;font-variant-numeric:tabular-nums}
+#pager span{opacity:.8;font-size:2.6cqh;cursor:pointer;padding:0 1cqh;border-radius:50%;user-select:none;transition:opacity .15s,background .15s}
+#pager span:hover{opacity:1;background:rgba(255,255,255,.18)}
+#pager span:active{background:rgba(255,255,255,.3)}
+#dot{position:fixed;left:1.4vh;bottom:1.4vh;width:1.1vh;height:1.1vh;border-radius:50%;background:#8d8478;opacity:.7;z-index:9}
+#dot.on{background:#43d17a;box-shadow:0 0 8px #43d17a}
+#dot.demo{background:#ffd54a;box-shadow:0 0 8px #ffd54a}
+#badge{position:fixed;left:3vh;bottom:1.1vh;font-size:1.5vh;color:rgba(255,255,255,.85);background:rgba(0,0,0,.4);padding:.3vh 1vh;border-radius:2vh;letter-spacing:.02em;z-index:9}
+#badge[hidden]{display:none}
+
+/* ── 조정 패널 ── */
+#gear{position:fixed;right:1.4vh;bottom:1.4vh;z-index:20;width:4.4vh;height:4.4vh;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:2.2vh;cursor:pointer;opacity:.35;transition:opacity .2s}
+#gear:hover,#gear:focus-visible{opacity:1;outline:2px solid var(--ui-accent)}
+#panel{position:fixed;top:0;right:0;bottom:0;width:min(340px,92vw);z-index:30;background:var(--ui-bg);color:var(--ui-fg);
+  transform:translateX(102%);transition:transform .3s ease;overflow-y:auto;box-shadow:-10px 0 30px rgba(0,0,0,.35);font-size:13px}
+#panel.open{transform:none}
+#panel header{padding:16px 18px 10px;border-bottom:1px solid var(--ui-line);display:flex;align-items:center;justify-content:space-between}
+#panel h2{font-size:14px;margin:0;font-weight:700;letter-spacing:.02em}
+#panel h2 small{display:block;font-weight:400;color:var(--ui-dim);font-size:11px;margin-top:2px}
+#close{background:none;border:0;color:var(--ui-dim);font-size:18px;cursor:pointer}
+.sec{padding:14px 18px;border-bottom:1px solid var(--ui-line)}
+.sec h3{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--ui-dim);margin:0 0 10px;font-weight:500}
+.row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 10px;margin-bottom:12px}
+.row label{font-weight:500}
+.row output{font-variant-numeric:tabular-nums;color:var(--ui-accent);font-weight:700;min-width:3.5em;text-align:right}
+.row input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--ui-accent)}
+.row .hint{grid-column:1/-1;color:var(--ui-dim);font-size:11px;line-height:1.45;margin-top:-4px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;padding:7px 8px;border-radius:6px;border:1px solid var(--ui-line);background:var(--ui-panel);color:var(--ui-fg);cursor:pointer;font:inherit;font-size:12px}
+.seg button.on{background:var(--ui-accent);color:#1f1b17;border-color:var(--ui-accent);font-weight:700}
+.btns{display:flex;flex-direction:column;gap:8px}
+.btns button{padding:9px 10px;border-radius:6px;border:1px solid var(--ui-line);background:var(--ui-panel);color:var(--ui-fg);cursor:pointer;font:inherit;text-align:left}
+.btns button:hover{border-color:var(--ui-accent)}
+#summary{background:var(--ui-panel);border:1px dashed var(--ui-line);padding:10px 12px;border-radius:6px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.6;white-space:pre;color:var(--ui-fg)}
+.keys{color:var(--ui-dim);font-size:11px;line-height:1.7}
+.keys kbd{background:var(--ui-panel);border:1px solid var(--ui-line);border-radius:3px;padding:0 5px;font-family:inherit;color:var(--ui-fg)}
+
+.shot #gear,.shot #badge,.shot #dot{display:none}
+.shot .paper,.shot .pin{animation:none!important}
+@media (prefers-reduced-motion:reduce){
+  .paper,.pin{animation-duration:.01s!important;transition-duration:.2s}
+  .note.leaving .paper{animation-duration:.2s}
+}
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="qrbox"><img src="qr.png" alt="편지 쓰기 QR"></div>
+  <a id="qrlink" href="letter.html" target="_blank" rel="noopener" title="새 창에서 응원 편지 쓰기" aria-label="새 창에서 응원 편지 쓰기"></a>
+  <button id="charBtn" title="관리자" aria-label="관리자 로그인"></button>
+  <div id="notes"></div>
+  <div id="empty">첫 번째 응원 편지를 기다리고 있어요 ✏️</div>
+  <div id="pager"></div>
+</div>
+<div id="dot"></div>
+<div id="badge" hidden>예시 데이터 · Firebase 연결 시 실제 편지로 자동 전환</div>
+
+<div id="login" role="dialog" aria-modal="true"><div class="box">
+  <h3>🔐 관리자</h3><p>비밀번호를 입력하세요</p>
+  <input type="password" id="pw" maxlength="8" inputmode="numeric" autocomplete="off">
+  <div class="msg" id="pwMsg"></div>
+  <div class="btns"><button class="cancel" id="pwCancel">취소</button><button class="ok" id="pwOk">열기</button></div>
+</div></div>
+
+<button id="gear" title="화면 시안 조정 (T)">⚙</button>
+<aside id="panel" aria-label="화면 시안 조정">
+  <header><h2>화면 시안 조정<small>눈으로 보면서 확정하는 값들. 브라우저에 저장됩니다.</small></h2><button id="close" aria-label="닫기">✕</button></header>
+
+  <div class="sec"><h3>확정할 3가지</h3>
+    <div class="row"><label for="perScreen">화면당 포스트잇</label><output id="o-perScreen">8개</output><input type="range" id="perScreen" min="4" max="30" step="1">
+      <div class="hint">꽉 차면 다음 페이지로 넘어갑니다. 그림 속 시안과 같은 4×2가 기본.</div></div>
+    <div class="row"><label for="maxChars">글자 수 제한</label><output id="o-maxChars">80자</output><input type="range" id="maxChars" min="30" max="150" step="5">
+      <div class="hint">짧은 글은 작은 포스트잇, 긴 글은 큰 포스트잇. letter.html의 maxChars와 같은 값으로 맞추세요.</div></div>
+    <div class="row"><label for="fontScale">글씨 크기</label><output id="o-fontScale">×1.0</output><input type="range" id="fontScale" min="0.6" max="1.6" step="0.05">
+      <div class="hint">포스트잇 안에 다 들어가도록 자동으로 줄어듭니다. 이 값은 최대 크기의 배율.</div></div>
+  </div>
+
+  <div class="sec"><h3>분위기</h3>
+    <div class="row"><label for="tilt">흐트러짐</label><output id="o-tilt">×0.4</output><input type="range" id="tilt" min="0" max="2" step="0.1"><div class="hint">0이면 반듯한 격자, 2면 많이 삐뚤빼뚤.</div></div>
+    <div class="row"><label for="pageSec">페이지 넘김</label><output id="o-pageSec">18초</output><input type="range" id="pageSec" min="6" max="60" step="1"><div class="hint">새 편지가 없을 때 페이지를 넘기는 간격.</div></div>
+    <div class="row"><label>사진 표시</label><span></span><div class="seg" style="grid-column:1/-1" data-key="photoMode"><button data-v="flip">뒷면으로 뒤집기</button><button data-v="thumb">모서리 썸네일</button></div>
+      <div class="hint">뒤집기: 사진 있는 포스트잇이 가끔 뒷면(사진)을 보여줍니다. 썸네일: 폴라로이드처럼 작게.</div></div>
+  </div>
+
+  <div class="sec"><h3>현재 값</h3><div id="summary"></div></div>
+
+  <div class="sec"><h3>동작</h3><div class="btns">
+    <button id="b-shuffle">🔀 예시 편지 다시 섞기</button>
+    <button id="b-live">✉️ 새 편지 도착 흉내내기</button>
+    <button id="b-copy">📋 현재 값 복사 (CONFIG용)</button>
+    <button id="b-reset">↺ 기본값으로</button>
+  </div></div>
+
+  <div class="sec keys"><kbd>T</kbd> 패널 · <kbd>←</kbd><kbd>→</kbd> 페이지 · <kbd>F</kbd> 전체화면 · <kbd>N</kbd> 새 편지 흉내</div>
+</aside>
+
+<script type="module">
+/* ══════════════════════════════════════════════
+   설정 — 행사마다 여기만 바꿉니다
+   ══════════════════════════════════════════════ */
+const CONFIG = {
+  title:    "나에게 응원의 편지 보내기",   // 브라우저 탭 이름만. 화면 제목은 board.jpg 그림에 있음
+  dbPath:   "rolling/letter-to-me", // Firebase 경로 (index / letter / admin 세 파일이 같아야 함)
+  joinUrl:  "https://yeon51422777-maker.github.io/letter-to-me/letter.html",  // qr.png도 이 주소로 만들어져 있음
+  adminPw:  "1212",                // 캐릭터 클릭 → 관리자 대시보드 비밀번호
+};
+const FB = {apiKey:"AIzaSyC_MlxFT3AFFb19l-XLwcKwxKtWam1g5To",authDomain:"teacher-letter-48131.firebaseapp.com",databaseURL:"https://teacher-letter-48131-default-rtdb.firebaseio.com",projectId:"teacher-letter-48131",storageBucket:"teacher-letter-48131.firebasestorage.app",messagingSenderId:"873083888112",appId:"1:873083888112:web:f157c8dc34f5c362dcbd35"};
+
+const DEFAULT_TUNE = {perScreen:8, maxChars:80, fontScale:1.1, tilt:0.3, pageSec:18, photoMode:"flip"};
+let TUNE = {...DEFAULT_TUNE};
+try{ Object.assign(TUNE, JSON.parse(localStorage.getItem("letter-to-me-tune")||"{}")); }catch(e){}
+const Q=new URLSearchParams(location.search);          // 시안 URL: ?demo=1&per=12&chars=80&font=1&tilt=0.4&shot=1
+if(Q.has("per")) TUNE.perScreen=+Q.get("per"); if(Q.has("chars")) TUNE.maxChars=+Q.get("chars");
+if(Q.has("font")) TUNE.fontScale=+Q.get("font"); if(Q.has("tilt")) TUNE.tilt=+Q.get("tilt");
+if(Q.has("shot")) document.documentElement.classList.add("shot");
+const saveTune = ()=>{ try{ localStorage.setItem("letter-to-me-tune", JSON.stringify(TUNE)); }catch(e){} };
+
+const $ = s=>document.querySelector(s);
+const stage=$("#stage"), notesEl=$("#notes"), emptyEl=$("#empty"), pagerEl=$("#pager");
+const wait = ms=>new Promise(r=>setTimeout(r,ms));
+const esc = t=>String(t||"").replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const PINS=["#e2503c","#2f7de1","#2bb673","#f2b63a"];
+const DOODLES=[["♡","#ff6b8a"],["☺","#f2b63a"],["☆","#f2b63a"],["♥","#ff6b8a"],["☺","#2f7de1"],["",""]];
+
+document.title = CONFIG.title;
+
+/* ── 캐릭터 클릭 → 관리자 ── */
+const login=$("#login"), pw=$("#pw"), pwMsg=$("#pwMsg");
+$("#charBtn").addEventListener("click",()=>{ pw.value=""; pwMsg.textContent=""; login.classList.add("show"); setTimeout(()=>pw.focus(),50); });
+$("#pwCancel").addEventListener("click",()=>login.classList.remove("show"));
+function checkPw(){
+  if(pw.value===CONFIG.adminPw){ login.classList.remove("show"); window.open("admin.html#"+CONFIG.adminPw,"_blank"); }
+  else { pwMsg.textContent="비밀번호가 틀렸어요"; pw.value=""; pw.focus(); }
+}
+$("#pwOk").addEventListener("click",checkPw);
+pw.addEventListener("keydown",e=>{ if(e.key==="Enter") checkPw(); if(e.key==="Escape") login.classList.remove("show"); });
+
+/* ── QR: qr.png(고정 이미지)를 쓰고, 쪽지를 누르면 새 창에서 입력 화면 ── */
+$("#qrlink").href = CONFIG.joinUrl;
+
+/* ── 결정적 난수: 같은 편지는 항상 같은 색·기울기·핀 ── */
+function rngFor(key){
+  let h=2166136261>>>0; for(const ch of String(key)){ h^=ch.charCodeAt(0); h=Math.imul(h,16777619)>>>0; }
+  return ()=>{ h=(h+0x6D2B79F5)>>>0; let t=h; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; };
+}
+function seedFor(key){
+  const rnd=rngFor(key);
+  return {color:Math.floor(rnd()*6), rot:rnd()*2-1, jx:rnd()*2-1, jy:rnd()*2-1, wide:rnd()<0.22, pin:Math.floor(rnd()*4), doodle:Math.floor(rnd()*DOODLES.length)};
+}
+
+/* ── 상태 ── */
+let letters=[], pages=[], cur=0, busy=false, lastChange=Date.now();
+const pageOrders=new Map();
+const startTime=Date.now();
+
+function rebuildPages(){
+  const n=TUNE.perScreen; pages=[];
+  for(let i=0;i<letters.length;i+=n) pages.push(letters.slice(i,i+n));
+  if(cur>pages.length-1) cur=Math.max(0,pages.length-1);
+}
+function orderFor(pi,cellCount){
+  let o=pageOrders.get(pi);
+  if(!o||o.length!==cellCount){
+    o=[...Array(cellCount).keys()];
+    const r=rngFor("page"+pi+"-"+cellCount);
+    for(let i=o.length-1;i>0;i--){ const j=Math.floor(r()*(i+1)); [o[i],o[j]]=[o[j],o[i]]; }
+    pageOrders.set(pi,o);
+  }
+  return o;
+}
+
+/* ── 격자: 그림 속 코르크 빈 영역(가로 7.8~95.7%, 세로 27.5~91%) ── */
+const REGION={x:0.095,y:0.325,w:0.855,h:0.565};   // 꽃다발(위 32%)·펜꽂이(왼쪽 9%) 피함
+function computeCells(n){
+  n=Math.max(1,+n||8);
+  let W=stage.clientWidth, H=stage.clientHeight;
+  if(!W||!H){ W=Math.min(innerWidth,innerHeight*1671/941); H=Math.min(innerHeight,innerWidth*941/1671); }
+  const region={x:W*REGION.x,y:H*REGION.y,w:W*REGION.w,h:H*REGION.h};
+  // 줄 수를 먼저 정함: 8개면 2줄×4칸 (이 그림은 가로로 길어서 칸 수 먼저 정하면 5칸이 됨)
+  const rows=Math.max(1,Math.round(Math.sqrt(n*region.h/region.w)));
+  const cols=Math.max(1,Math.ceil(n/rows));
+  const cw=region.w/cols, ch=region.h/rows, cells=[];
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) cells.push({cx:region.x+cw*(c+.5),cy:region.y+ch*(r+.5),cw,ch});
+  return {cells,region};
+}
+function sizeClass(L){
+  const len=(L.text||"").length, m=TUNE.maxChars;
+  let s = len<=m*0.35?"S": len<=m*0.65?"M":"L";
+  if(L.photo && TUNE.photoMode==="thumb" && s==="S") s="M";
+  return s;
+}
+
+/* ── 포스트잇 DOM ── */
+function buildNote(L, cell, region, delay){
+  const sd=L.seed, sc=sizeClass(L);
+  const base=Math.min(cell.cw,cell.ch);
+  // 첨부 시안처럼: 칸을 거의 채우는 가로형 포스트잇, 글 길이에 따라 크기 차이는 조금만
+  let h=base*({S:.86,M:.93,L:1}[sc]);
+  let w=Math.min(cell.cw*0.86, h*1.2);
+  const ax=(cell.cw-w)/2*0.8, ay=(cell.ch-h)/2*0.8;
+  const x=Math.max(region.x-base*0.03,Math.min(region.x+region.w-w+base*0.03, cell.cx-w/2+sd.jx*ax));
+  const y=Math.max(region.y,Math.min(region.y+region.h-h, cell.cy-h/2+sd.jy*ay));
+  const rot=(sd.rot*7*TUNE.tilt).toFixed(2);
+
+  const el=document.createElement("div");
+  el.className="note"; el.dataset.key=L.key;
+  if(L.photo) el.dataset.photo="1";
+  el.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${h}px;--r:${rot}deg;--d:${delay}ms;--c:var(--c${L.color??sd.color});--pin:${PINS[sd.pin]}`;   // 입력 화면에서 고른 색 우선, 없으면 자동
+  const thumb = L.photo && TUNE.photoMode==="thumb";
+  const [dch,dcol]=DOODLES[sd.doodle];
+  el.innerHTML=`<span class="pin"></span><div class="paper">
+    <div class="face front${thumb?" has-thumb":""}${L.photo&&!thumb?" has-photo":""}">
+      <div class="txt">${esc(L.text)}</div>
+      <div class="foot">${thumb?`<div class="thumb"><img src="${L.photo}" alt=""></div>`:""}<div class="from">${esc(L.name||"익명")}</div></div>
+      ${dch&&!thumb?`<span class="doodle" style="color:${dcol}">${dch}</span>`:""}
+      ${L.photo&&!thumb?`<span class="icon">📷</span>`:""}
+    </div>
+    ${L.photo&&!thumb?`<div class="face back"><img src="${L.photo}" alt="${esc(L.name)}님의 사진"><div class="cap">${esc(L.name||"익명")}님의 사진</div></div>`:""}
+  </div>`;
+  const paper=el.querySelector(".paper");
+  paper.addEventListener("animationend",()=>{ if(!el.classList.contains("leaving")) paper.classList.add("stuck"); },{once:true});
+  notesEl.appendChild(el);
+  fitText(el,h);
+  return el;
+}
+function fitText(el,h){
+  const txt=el.querySelector(".txt"), from=el.querySelector(".from"), cap=el.querySelector(".cap"), doodle=el.querySelector(".doodle");
+  from.style.fontSize=(h*0.1)+"px"; if(cap) cap.style.fontSize=(h*0.1)+"px"; if(doodle) doodle.style.fontSize=(h*0.11)+"px";
+  let fs=h*0.19*TUNE.fontScale; txt.style.fontSize=fs+"px";
+  let guard=0;
+  while(txt.scrollHeight>txt.clientHeight+1 && fs>10 && guard++<40){ fs*=0.94; txt.style.fontSize=fs+"px"; }
+}
+
+/* ── 페이지 표시 ── */
+async function showPage(i,{instant=false}={}){
+  if(busy) return; busy=true;
+  i=Math.max(0,Math.min(i,Math.max(0,pages.length-1)));
+  const existing=[...notesEl.children];
+  if(existing.length && !instant && !reduced){
+    existing.forEach((n,k)=>{ n.style.setProperty("--d",(k*45)+"ms"); n.classList.add("leaving"); });
+    await wait(existing.length*45+620);
+  }
+  notesEl.innerHTML="";
+  cur=i; lastChange=Date.now();
+  const page=pages[i]||[];
+  const step=instant?40:reduced?0:130;
+  try{
+    const {cells,region}=computeCells(TUNE.perScreen), order=orderFor(i,cells.length);
+    page.forEach((L,idx)=>buildNote(L,cells[order[idx%cells.length]],region,idx*step));
+  }catch(e){ console.error(e); }
+  updateChrome();
+  await wait(page.length*step+300);
+  busy=false;
+}
+function updateChrome(){
+  emptyEl.hidden = letters.length>0;
+  pagerEl.innerHTML = `<span data-go="-1" title="이전 페이지">‹</span>${Math.min(cur+1,Math.max(1,pages.length))} / ${Math.max(1,pages.length)}<span data-go="1" title="다음 페이지">›</span>`;
+}
+
+/* ── 편지 도착 ── */
+let initTimer=null;
+function onLetter(L, live){
+  if(letters.some(x=>x.key===L.key)) return;
+  L.seed=seedFor(L.key); letters.push(L);
+  if(!live){ clearTimeout(initTimer); initTimer=setTimeout(()=>{ rebuildPages(); showPage(0,{instant:true}); },500); return; }
+  liveQueue.push(L); pumpLive();
+}
+const liveQueue=[]; let pumping=false;
+async function pumpLive(){
+  if(pumping) return; pumping=true;
+  while(liveQueue.length){
+    while(busy) await wait(80);
+    const L=liveQueue.shift();
+    const wasLast = cur===Math.max(0,pages.length-1);
+    const lastLen = pages.length? pages[pages.length-1].length : 0;
+    rebuildPages();
+    const last=pages.length-1;
+    if(wasLast && lastLen<TUNE.perScreen && lastLen>0){
+      const {cells,region}=computeCells(TUNE.perScreen), order=orderFor(last,cells.length);
+      const idx=pages[last].length-1;
+      buildNote(L,cells[order[idx%cells.length]],region,0); cur=last; updateChrome();
+      lastChange=Date.now();
+    } else {
+      await showPage(last);
+    }
+    await wait(900);
+  }
+  pumping=false;
+}
+function removeLetter(key){
+  const i=letters.findIndex(x=>x.key===key); if(i<0) return;
+  letters.splice(i,1); rebuildPages();
+  const el=notesEl.querySelector(`[data-key="${key}"]`);
+  if(el){ el.classList.add("leaving"); setTimeout(()=>el.remove(),700); }
+  updateChrome();
+}
+
+/* ── 자동 순환 · 사진 뒤집기 ── */
+setInterval(()=>{
+  if(!busy && pages.length>1 && !liveQueue.length && Date.now()-lastChange>TUNE.pageSec*1000) showPage((cur+1)%pages.length);
+},1000);
+setInterval(()=>{
+  if(TUNE.photoMode!=="flip") return;
+  const cands=[...notesEl.querySelectorAll('.note[data-photo]:not(.flipped):not(.leaving)')].filter(n=>n.querySelector(".stuck"));
+  if(!cands.length || notesEl.querySelector(".flipped")) return;
+  const n=cands[Math.floor(Math.random()*cands.length)];
+  n.classList.add("flipped"); setTimeout(()=>n.classList.remove("flipped"),4200);
+},2600);
+/* ── 페이지 표시의 ‹ › 클릭으로 넘기기 ── */
+pagerEl.addEventListener("click",e=>{
+  const b=e.target.closest("[data-go]"); if(!b||!pages.length) return;
+  showPage((cur+(+b.dataset.go)+pages.length)%pages.length);
+});
+let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>showPage(cur,{instant:true}),250); });
+
+/* ══════════════════════════════════════════════
+   조정 패널
+   ══════════════════════════════════════════════ */
+const panel=$("#panel");
+const fmt={perScreen:v=>v+"개",maxChars:v=>v+"자",fontScale:v=>"×"+(+v).toFixed(2).replace(/0$/,""),tilt:v=>"×"+(+v).toFixed(1),pageSec:v=>v+"초"};
+function syncPanel(){
+  for(const k of Object.keys(fmt)){ $("#"+k).value=TUNE[k]; $("#o-"+k).textContent=fmt[k](TUNE[k]); }
+  document.querySelectorAll(".seg").forEach(seg=>seg.querySelectorAll("button").forEach(b=>b.classList.toggle("on",b.dataset.v===TUNE[seg.dataset.key])));
+  $("#summary").textContent=
+`perScreen : ${TUNE.perScreen}   // 화면당 개수
+maxChars  : ${TUNE.maxChars}   // 글자 제한 → letter.html에도
+fontScale : ${TUNE.fontScale}
+tilt      : ${TUNE.tilt}
+pageSec   : ${TUNE.pageSec}
+photoMode : "${TUNE.photoMode}"`;
+}
+function applyTune(k,v,{relayout=true}={}){
+  TUNE[k]=v; saveTune(); syncPanel();
+  if(k==="perScreen"){ pageOrders.clear(); rebuildPages(); showPage(cur,{instant:true}); }
+  else if(relayout){ showPage(cur,{instant:true}); }
+}
+for(const k of Object.keys(fmt)){
+  $("#"+k).addEventListener("input",e=>{ const v=+e.target.value; applyTune(k,v,{relayout:k!=="pageSec"}); });
+}
+document.querySelectorAll(".seg").forEach(seg=>seg.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return; applyTune(seg.dataset.key,b.dataset.v);
+}));
+const togglePanel=()=>panel.classList.toggle("open");
+$("#gear").addEventListener("click",togglePanel); $("#close").addEventListener("click",togglePanel);
+$("#b-reset").addEventListener("click",()=>{ TUNE={...DEFAULT_TUNE}; saveTune(); pageOrders.clear(); rebuildPages(); syncPanel(); showPage(cur,{instant:true}); });
+$("#b-copy").addEventListener("click",async()=>{ try{ await navigator.clipboard.writeText($("#summary").textContent); $("#b-copy").textContent="✅ 복사됨"; setTimeout(()=>$("#b-copy").textContent="📋 현재 값 복사 (CONFIG용)",1500);}catch(e){} });
+$("#b-shuffle").addEventListener("click",()=>{ if(demo) startDemo(true); else { pageOrders.clear(); showPage(cur,{instant:true}); } });
+$("#b-live").addEventListener("click",()=>fakeArrival());
+addEventListener("keydown",e=>{
+  if(e.target.matches("input,textarea")) return;
+  const k=e.key.toLowerCase();
+  if(k==="t") togglePanel();
+  else if(k==="f"){ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.(); }
+  else if(e.key==="ArrowRight"&&pages.length) showPage((cur+1)%pages.length);
+  else if(e.key==="ArrowLeft"&&pages.length) showPage((cur-1+pages.length)%pages.length);
+  else if(k==="n") fakeArrival();
+});
+syncPanel();
+
+/* ══════════════════════════════════════════════
+   데이터 — Firebase 실시간, 실패하면 예시 데이터
+   ══════════════════════════════════════════════ */
+let demo=false;
+const DEMO=[
+ ["김영수","35년 동안 하루도 안 빠지고 출근한 나, 정말 수고했다. 이제는 좀 쉬어도 돼.",1],
+ ["박순자","그동안 고생 많았어"],
+ ["이정호","가족 먼저 챙기느라 미뤄둔 기타, 올해는 꼭 배우자."],
+ ["최미경","넌 생각보다 훨씬 잘 해냈어. 내가 제일 잘 알아."],
+ ["정동원","이제는 나를 위해 살자!"],
+ ["한옥순","아이들 다 키우고 부모님 모시느라 애썼다. 오늘부터는 내 이름으로 살아보자.",1],
+ ["오세훈","건강만 하자. 그거면 충분하다."],
+ ["윤말순","늦었다고 생각한 지금이 제일 빠른 때래. 스마트폰도 AI도 배우는 내가 자랑스럽다."],
+ ["강태식","고맙다, 나야 ♥"],
+ ["송영희","무릎 아픈 것도 참고 여기까지 온 나에게 박수를 보낸다."],
+ ["임재덕","퇴직은 끝이 아니라 두 번째 시작."],
+ ["배정숙","오늘 수업 들으러 나온 것만으로도 멋지다",1],
+ ["신현철","앞으로 30년, 하고 싶은 거 다 해보자. 여행도 가고 그림도 그리고."],
+ ["문경자","잘 살았다. 참 잘 살았다."],
+ ["조병국","젊을 땐 몰랐는데 나 꽤 괜찮은 사람이더라."],
+ ["황금순","손주 보는 것도 좋지만 내 시간도 소중해. 미안해하지 말자."],
+ ["서정남","이번 주말엔 아내랑 바다 보러 가자",1],
+ ["남궁옥","애썼다."],
+ ["이순례","친구들아 우리 아직 청춘이다! 나도 청춘이다!"],
+ ["박재용","실수도 많았지만 그래도 정직하게 살았다. 그게 내 자랑이다."],
+ ["김말자","사랑한다 말자야"],
+ ["장기호","새벽 버스 타던 그 시절의 나에게, 덕분에 지금이 있다."],
+ ["유정희","꽃도 키우고 글도 쓰고, 하고 싶던 일 하나씩 해보자."],
+ ["노성수","오늘도 웃자 ☺"],
+];
+const EXTRA=[["권영자","지금 막 도착한 응원이에요 ✉️"],["홍성민","나는 나를 믿는다"],["안순희","오늘 찍은 사진 붙입니다 📷",1],["류정태","천천히 가도 괜찮아"],["백금자","내일의 나에게, 오늘 참 잘했어"],["전병수","수고했다 내 인생"]];
+let extraIdx=0;
+function fakePhoto(i){
+  const c=document.createElement("canvas"); c.width=480; c.height=360; const g=c.getContext("2d");
+  const pal=[["#f6d365","#fda085"],["#a1c4fd","#c2e9fb"],["#84fab0","#8fd3f4"],["#fbc2eb","#a6c1ee"],["#ffecd2","#fcb69f"]][i%5];
+  const gr=g.createLinearGradient(0,0,480,360); gr.addColorStop(0,pal[0]); gr.addColorStop(1,pal[1]); g.fillStyle=gr; g.fillRect(0,0,480,360);
+  g.fillStyle="rgba(255,255,255,.4)"; for(let k=0;k<5;k++){ g.beginPath(); g.arc(60+k*95,110+(k%2)*130,40+k*6,0,7); g.fill(); }
+  g.fillStyle="rgba(40,30,20,.55)"; g.font="bold 36px 'Noto Sans KR',sans-serif"; g.textAlign="center"; g.fillText("예시 사진",240,200);
+  return c.toDataURL("image/jpeg",.7);
+}
+function startDemo(reshuffle=false){
+  demo=true; $("#dot").className="demo"; $("#badge").hidden=false;
+  letters=[]; pages=[]; pageOrders.clear(); notesEl.innerHTML=""; cur=0;
+  const salt=reshuffle?String(Math.random()).slice(2,7):"";
+  DEMO.forEach((d,i)=>onLetter({key:"demo"+salt+i,name:d[0],text:d[1],photo:d[2]?fakePhoto(i):null,ts:startTime-100000+i*1000},false));
+}
+function fakeArrival(){
+  const d=EXTRA[extraIdx%EXTRA.length]; extraIdx++;
+  onLetter({key:"live"+Date.now(),name:d[0],text:d[1],photo:d[2]?fakePhoto(extraIdx):null,ts:Date.now()},true);
+}
+async function connect(){
+  if(new URLSearchParams(location.search).has("demo")) return startDemo();
+  try{
+    const [{initializeApp},{getDatabase,ref,onChildAdded,onChildChanged,onChildRemoved}] = await Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js")]);
+    const db=getDatabase(initializeApp(FB)); const r=ref(db,CONFIG.dbPath);
+    const toL=s=>{ const d=s.val()||{}; return {key:s.key,name:d.name,text:d.text,photo:d.photo||null,ts:d.timestamp||0,hidden:!!d.hidden,color:(Number.isInteger(d.color)&&d.color>=0&&d.color<6)?d.color:null}; };
+    // 처음 접속 시 쏟아지는 기존 편지는 한꺼번에 그리고, 그 뒤에 오는 편지는 시계와 상관없이 "새 편지"로 붙입니다
+    let loaded=false, settle=null;
+    const markLoaded=()=>{ loaded=true; };
+    settle=setTimeout(markLoaded,2500);                       // DB가 비어 있어도 2.5초 뒤 실시간 모드
+    onChildAdded(r,s=>{ const L=toL(s); if(L.hidden) return;
+      if(!loaded){ clearTimeout(settle); settle=setTimeout(markLoaded,800); }   // 초기 목록이 끝나고 0.8초 뒤 실시간 모드
+      onLetter(L, loaded); });
+    onChildChanged(r,s=>{ const L=toL(s); if(L.hidden) removeLetter(L.key); else if(!letters.some(x=>x.key===L.key)) onLetter(L,true); });
+    onChildRemoved(r,s=>removeLetter(s.key));
+    $("#dot").classList.add("on");
+    setTimeout(()=>{ if(!letters.length) updateChrome(); },1500);
+  }catch(e){ console.warn("Firebase 연결 실패 → 예시 데이터로 표시",e); startDemo(); }
+}
+window.postitDemo=()=>startDemo(true);   // 콘솔에서 예시 데이터 강제: postitDemo()
+document.fonts.ready.then(connect);
+</script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#10211b">
+<title>나에게 응원의 편지 보내기</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ground:#10211b; --ground-2:#0a1511;      /* 카네이션 잎의 깊은 초록 */
+  --pink:#ff9eb1; --pink-ink:#3d1220;         /* 카네이션 분홍 */
+  --leaf:#a9d3b0; --cream:#fff8ee; --dim:#9db3a8; --line:rgba(255,255,255,.14);
+  --ink:#22201c; --ink-soft:#6b5a48;
+  --c0:#fff48f; --c1:#ffc4dc; --c2:#bdf3cf; --c3:#bfe6ff; --c4:#ffd9b0; --c5:#e4c8f7;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{min-height:100%}
+body{font-family:"Noto Sans KR",system-ui,sans-serif;color:var(--cream);background:radial-gradient(120% 70% at 50% 0%,var(--ground),var(--ground-2)) fixed var(--ground-2);padding:30px 20px 56px;-webkit-font-smoothing:antialiased}
+main{max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+section{display:flex;flex-direction:column;gap:22px}
+
+/* 머리말 */
+.head{text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+.head .eyebrow{font-size:15px;color:var(--leaf);letter-spacing:.04em}
+.head h1{font-family:Gaegu,cursive;font-weight:700;font-size:36px;line-height:1.15;text-wrap:balance;word-break:keep-all}
+.head h1 em{font-style:normal;color:var(--pink)}
+.head .rule{width:54px;height:3px;border-radius:3px;background:var(--pink);opacity:.8;margin-top:4px}
+
+/* 단계 제목 */
+.step{font-size:16px;font-weight:700;color:var(--cream);display:flex;align-items:center;gap:8px}
+.step small{font-weight:400;color:var(--dim);font-size:14px}
+.group{display:flex;flex-direction:column;gap:10px}
+
+/* 첫 문장 고르기 */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{font:500 16px "Noto Sans KR",sans-serif;color:var(--cream);background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:999px;padding:10px 15px;cursor:pointer}
+.chips button:active{background:rgba(255,158,177,.25);border-color:var(--pink)}
+
+/* 포스트잇 */
+.note{position:relative;background:var(--c);color:var(--ink);padding:22px 20px 16px;border-radius:3px;box-shadow:0 18px 30px -14px rgba(0,0,0,.7);transition:background .25s}
+.note::before{content:"";position:absolute;left:0;right:0;top:0;height:30px;background:linear-gradient(180deg,rgba(0,0,0,.07),rgba(0,0,0,0));pointer-events:none;border-radius:3px 3px 0 0}
+.note::after{content:"";position:absolute;right:0;bottom:0;width:34px;height:34px;pointer-events:none;background:linear-gradient(135deg,transparent 49%,rgba(0,0,0,.05) 50%,rgba(0,0,0,.15))}
+.to{font-family:Gaegu,cursive;font-weight:700;font-size:21px;color:var(--ink-soft);margin-bottom:6px}
+textarea,input[type=text]{width:100%;border:0;background:transparent;color:var(--ink);outline:none;font-family:"Noto Sans KR",system-ui,sans-serif}
+textarea{font-size:21px;font-weight:500;line-height:38px;min-height:190px;resize:none;word-break:keep-all;display:block;
+  background-image:repeating-linear-gradient(transparent,transparent 37px,rgba(0,0,0,.13) 37px,rgba(0,0,0,.13) 38px)}
+textarea::placeholder,input::placeholder{color:rgba(34,32,28,.42);font-weight:400}
+.counter{text-align:right;font-size:15px;color:var(--ink-soft);margin-top:6px;font-variant-numeric:tabular-nums}
+.counter.warn{color:#c62828;font-weight:700}
+.from{display:flex;align-items:center;gap:8px;margin-top:8px;border-top:1px dashed rgba(0,0,0,.28);padding-top:12px}
+.from label{font-size:16px;color:var(--ink-soft);white-space:nowrap;font-weight:500}
+.from input{font-size:20px;font-weight:700;text-align:right;padding:4px 0}
+textarea:focus-visible,.from input:focus-visible{box-shadow:0 2px 0 rgba(0,0,0,.4)}
+
+/* 색 고르기 */
+.swatches{display:flex;gap:12px;flex-wrap:wrap}
+.swatches button{width:46px;height:46px;border-radius:50%;border:3px solid transparent;background:var(--c);cursor:pointer;box-shadow:0 0 0 1px rgba(255,255,255,.18) inset}
+.swatches button[aria-pressed=true]{border-color:var(--cream);box-shadow:0 0 0 3px var(--ground),0 0 0 5px var(--pink)}
+
+/* 사진 */
+.photo-lbl{display:flex;align-items:center;gap:12px;padding:16px;border:1.5px dashed var(--line);border-radius:14px;color:var(--cream);font-size:17px;cursor:pointer}
+.photo-lbl small{display:block;font-size:14px;color:var(--dim);margin-top:2px}
+.photo-lbl .ico{font-size:26px}
+.photo-prev{display:none;position:relative;border-radius:14px;overflow:hidden}
+.photo-prev img{width:100%;max-height:240px;object-fit:cover;display:block}
+.photo-del{position:absolute;top:10px;right:10px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:18px;cursor:pointer}
+
+/* 버튼 */
+.submit{width:100%;min-height:62px;border:0;border-radius:16px;background:var(--pink);color:var(--pink-ink);font:700 21px "Noto Sans KR",sans-serif;cursor:pointer;box-shadow:0 12px 26px -10px rgba(255,158,177,.6)}
+.submit:disabled{opacity:.6}
+.submit:focus-visible,.chips button:focus-visible,.swatches button:focus-visible,#again:focus-visible{outline:3px solid var(--cream);outline-offset:3px}
+.err{font-size:16px;color:#ffc2c2;text-align:center;min-height:1.5em}
+
+/* 보낸 뒤 */
+#done{display:none;text-align:center;align-items:center;padding-top:10px}
+#done .note{width:min(280px,82vw);min-height:250px;text-align:left;transform:rotate(-1.5deg);animation:slap .6s cubic-bezier(.2,.9,.3,1.15) both}
+#done .note .t{font-family:"Nanum Pen Script",cursive;font-size:30px;line-height:1.2;word-break:keep-all;white-space:pre-wrap}
+#done .note .n{font-family:"Nanum Pen Script",cursive;font-size:22px;color:var(--ink-soft);text-align:right;margin-top:12px}
+#done h2{font-family:Gaegu,cursive;font-weight:700;font-size:32px;line-height:1.2;text-wrap:balance;word-break:keep-all}
+#done h2 em{font-style:normal;color:var(--pink)}
+#done p{font-size:17px;color:var(--dim)}
+#again{min-height:54px;padding:0 28px;border-radius:14px;border:1.5px solid var(--pink);background:transparent;color:var(--pink);font:700 18px "Noto Sans KR",sans-serif;cursor:pointer}
+@keyframes slap{0%{transform:rotate(-9deg) scale(1.45);opacity:0}55%{opacity:1;transform:rotate(1deg) scale(.96)}100%{transform:rotate(-1.5deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){#done .note{animation:none}}
+</style>
+</head>
+<body>
+<main>
+  <header class="head">
+    <div class="eyebrow">열심히 살아온 나에게</div>
+    <h1>나에게 응원의<br><em>편지</em> 보내기</h1>
+    <div class="rule"></div>
+  </header>
+
+  <section id="form">
+    <div class="group">
+      <div class="step">첫 마디 고르기 <small>눌러서 시작해도 돼요</small></div>
+      <div class="chips" id="chips">
+        <button type="button">그동안 고생 많았어.</button>
+        <button type="button">정말 수고했다.</button>
+        <button type="button">이제는 나를 위해 살자.</button>
+        <button type="button">고맙다, 나야.</button>
+      </div>
+    </div>
+
+    <div class="note" id="note" style="--c:var(--c0)">
+      <div class="to">나에게,</div>
+      <textarea id="msg" placeholder="여기에 응원의 말을 써주세요" aria-label="나에게 보내는 응원의 말"></textarea>
+      <div class="counter" id="cnt">0 / 80</div>
+      <div class="from"><label for="name">보내는 사람</label><input id="name" type="text" maxlength="12" placeholder="내 이름" autocomplete="off"></div>
+    </div>
+
+    <div class="group">
+      <div class="step">포스트잇 색 <small id="colorName"></small></div>
+      <div class="swatches" id="swatches"></div>
+    </div>
+
+    <div class="group">
+      <label class="photo-lbl" for="photoInput" id="photoLbl"><span class="ico">📷</span><span>사진 붙이기 <small>안 붙여도 돼요. 붙이면 포스트잇 뒷면에 보여요</small></span></label>
+      <input type="file" id="photoInput" accept="image/*" hidden>
+      <div class="photo-prev" id="photoPrev"><img id="prevImg" alt="붙일 사진 미리보기"><button type="button" class="photo-del" id="photoDel" aria-label="사진 빼기">✕</button></div>
+    </div>
+
+    <div class="group">
+      <button class="submit" id="send">응원 편지 붙이기</button>
+      <div class="err" id="err" role="alert"></div>
+    </div>
+  </section>
+
+  <section id="done">
+    <div class="note" id="doneNote"><div class="to">나에게,</div><div class="t" id="doneText"></div><div class="n" id="doneName"></div></div>
+    <h2>나에게 보낸 <em>응원</em>이<br>붙었어요</h2>
+    <p>앞 화면에서 내 포스트잇을 찾아보세요</p>
+    <button id="again">하나 더 쓰기</button>
+  </section>
+</main>
+
+<script type="module">
+/* index.html의 CONFIG와 같은 값으로 맞춥니다 */
+const CONFIG = {
+  dbPath:   "rolling/letter-to-me",
+  maxChars: 80,
+};
+const FB = {apiKey:"AIzaSyC_MlxFT3AFFb19l-XLwcKwxKtWam1g5To",authDomain:"teacher-letter-48131.firebaseapp.com",databaseURL:"https://teacher-letter-48131-default-rtdb.firebaseio.com",projectId:"teacher-letter-48131",storageBucket:"teacher-letter-48131.firebasestorage.app",messagingSenderId:"873083888112",appId:"1:873083888112:web:f157c8dc34f5c362dcbd35"};
+
+const $=s=>document.querySelector(s);
+const ta=$("#msg"), cnt=$("#cnt"), nameEl=$("#name"), err=$("#err");
+ta.maxLength=CONFIG.maxChars;
+
+/* 색: 처음엔 랜덤, 동그라미를 눌러 바꿀 수 있음 */
+const COLORS=["노랑","분홍","민트","하늘","살구","라벤더"];
+let color=Math.floor(Math.random()*6);
+const sw=$("#swatches");
+COLORS.forEach((n,i)=>{ const b=document.createElement("button"); b.type="button"; b.style.setProperty("--c",`var(--c${i})`); b.setAttribute("aria-label",n+" 포스트잇"); b.addEventListener("click",()=>{ color=i; paint(); }); sw.appendChild(b); });
+function paint(){ $("#note").style.setProperty("--c",`var(--c${color})`); $("#colorName").textContent=COLORS[color]; [...sw.children].forEach((b,i)=>b.setAttribute("aria-pressed",i===color)); }
+paint();
+
+const count=()=>{ const l=ta.value.length; cnt.textContent=`${l} / ${CONFIG.maxChars}`; cnt.classList.toggle("warn",l>=CONFIG.maxChars-5); };
+ta.addEventListener("input",count); count();
+
+/* 첫 마디: 누르면 글칸에 들어감 */
+$("#chips").addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  const add=b.textContent.trim(); const cur=ta.value.trimEnd();
+  ta.value=((cur?cur+" ":"")+add+" ").slice(0,CONFIG.maxChars); count(); ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); err.textContent="";
+});
+
+/* 사진: 500px, 65% 품질로 줄여서 저장 */
+let photo=null;
+function compress(file,max,q){ return new Promise(res=>{ const r=new FileReader(); r.onload=e=>{ const img=new Image(); img.onload=()=>{ let w=img.width,h=img.height; if(w>h&&w>max){h=h*max/w;w=max;} else if(h>max){w=w*max/h;h=max;} const c=document.createElement("canvas"); c.width=w;c.height=h; c.getContext("2d").drawImage(img,0,0,w,h); res(c.toDataURL("image/jpeg",q)); }; img.src=e.target.result; }; r.readAsDataURL(file); }); }
+function clearPhoto(){ photo=null; $("#photoInput").value=""; $("#photoPrev").style.display="none"; $("#photoLbl").style.display="flex"; }
+$("#photoInput").addEventListener("change",async e=>{ const f=e.target.files[0]; if(!f) return; photo=await compress(f,500,.65); $("#prevImg").src=photo; $("#photoPrev").style.display="block"; $("#photoLbl").style.display="none"; });
+$("#photoDel").addEventListener("click",clearPhoto);
+
+let dbApi=null;
+async function getDb(){
+  if(dbApi) return dbApi;
+  const [{initializeApp},{getDatabase,ref,push}]=await Promise.all([import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"),import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js")]);
+  return dbApi={ref,push,db:getDatabase(initializeApp(FB))};
+}
+const demo=new URLSearchParams(location.search).has("demo");   // ?demo=1 이면 보내는 흉내만
+$("#send").addEventListener("click",async()=>{
+  const text=ta.value.trim(), name=nameEl.value.trim()||"나";
+  if(!text){ err.textContent="응원의 말을 한 줄 써주세요"; ta.focus(); return; }
+  err.textContent=""; $("#send").disabled=true; $("#send").textContent="붙이는 중…";
+  try{
+    if(demo){ await new Promise(r=>setTimeout(r,600)); }
+    else{
+      const {ref,push,db}=await getDb();
+      const data={name,text,timestamp:Date.now(),color};
+      if(photo) data.photo=photo;
+      await push(ref(db,CONFIG.dbPath),data);
+    }
+    $("#doneNote").style.setProperty("--c",`var(--c${color})`); $("#doneText").textContent=text; $("#doneName").textContent="— "+name;
+    $("#form").style.display="none"; $("#done").style.display="flex"; scrollTo(0,0);
+  }catch(e){ console.error(e); err.textContent="보내지 못했어요. 인터넷 연결을 확인하고 다시 눌러주세요."; }
+  $("#send").disabled=false; $("#send").textContent="응원 편지 붙이기";
+});
+$("#again").addEventListener("click",()=>{ ta.value=""; count(); clearPhoto(); color=Math.floor(Math.random()*6); paint(); $("#done").style.display="none"; $("#form").style.display="flex"; scrollTo(0,0); });
+</script>
+</body>
+</html>
