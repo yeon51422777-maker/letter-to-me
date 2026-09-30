@@ -273,6 +273,7 @@ function computeCells(n){
   n=Math.max(1,+n||8);
   let W=stage.clientWidth, H=stage.clientHeight;
   if(!W||!H){ W=Math.min(innerWidth,innerHeight*1671/941); H=Math.min(innerHeight,innerWidth*941/1671); }
+  if(!W||!H){ W=1671; H=941; }                     // 탭이 숨겨져 크기를 못 읽을 때: 임시 크기로 그리고, 다시 보일 때 새로 그림
   const region={x:W*REGION.x,y:H*REGION.y,w:W*REGION.w,h:H*REGION.h};
   // 줄 수를 먼저 정함: 8개면 2줄×4칸 (이 그림은 가로로 길어서 칸 수 먼저 정하면 5칸이 됨)
   const rows=Math.max(1,Math.round(Math.sqrt(n*region.h/region.w)));
@@ -409,6 +410,7 @@ pagerEl.addEventListener("click",e=>{
   const b=e.target.closest("[data-go]"); if(!b||!pages.length) return;
   showPage((cur+(+b.dataset.go)+pages.length)%pages.length);
 });
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden) setTimeout(()=>showPage(cur,{instant:true}),150); });
 let rz; addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>showPage(cur,{instant:true}),250); });
 
 /* ══════════════════════════════════════════════
